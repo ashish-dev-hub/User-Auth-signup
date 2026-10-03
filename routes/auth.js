@@ -124,4 +124,64 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 
+router.post("/resend-otp", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+     
+        if (!email) {                    // Check email
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        
+        const user = await User.findOne({ email });    // Find user
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+       
+        if (user.isVerified) {          // Check if already verified
+            return res.status(400).json({
+                message: "User is already verified"
+            });
+        }
+
+        const otp = crypto.randomInt(100000, 1000000).toString();         // Generate new OTP
+        
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);        // New OTP expires after 10 minutes
+        
+        user.otp = otp;         // Update user
+        user.otpExpires = otpExpires;
+
+        await user.save();
+
+       
+        await sendEmail.sendMail({                // Send new OTP
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Your New OTP",
+            text: `Your new OTP is: ${otp}
+
+This OTP is valid for 10 minutes.
+
+Do not share this OTP with anyone.`
+        });
+
+        res.status(200).json({
+            message: "New OTP sent successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
 module.exports = router;
