@@ -4,6 +4,7 @@ const User = require("../models/user");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 const otpLimiter = require("../middleware/otpLimiter");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -185,4 +186,72 @@ Do not share this OTP with anyone.`
         });
     }
 });
+
+
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Check required fields
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
+
+        // Find user
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Check email verification
+        if (!user.isVerified) {
+            return res.status(401).json({
+                message: "Please verify your email first"
+            });
+        }
+
+        // Check password
+        const isPasswordCorrect = await bcrypt.compare(
+            password,
+            user.password
+        );
+
+        if (!isPasswordCorrect) {
+            return res.status(401).json({
+                message: "Invalid email or password"
+            });
+        }
+
+        // Generate JWT
+        const token = jwt.sign(
+            {
+                userId: user._id,
+                email: user.email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "7d"
+            }
+        );
+
+        res.status(200).json({
+            message: "Login successful",
+            token: token
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
+
+
 module.exports = router;
