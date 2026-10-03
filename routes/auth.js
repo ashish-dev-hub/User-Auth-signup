@@ -62,4 +62,66 @@ router.post("/signup", async (req, res) => {
     }
 });
 
+
+
+router.post("/verify-otp", async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        
+        if (!email || !otp) {               // Checking required fields
+            return res.status(400).json({
+                message: "Email and OTP are required"
+            });
+        }
+
+        const user = await User.findOne({ email });    // Find user
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        
+        if (user.isVerified) {       // Check is already verified ?
+            return res.status(400).json({
+                message: "User is already verified"
+            });
+        }
+
+        
+        if (user.otp !== otp) {             // Check OTP
+            return res.status(400).json({
+                message: "Invalid OTP"
+            });
+        }
+
+        if (user.otpExpires < new Date()) {          // Check OTP expiry
+            return res.status(400).json({
+                message: "OTP has expired"
+            });
+        }
+
+        user.isVerified = true;
+
+        user.otp = null;            // Clear OTP after successful verification
+        user.otpExpires = null;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Email verified successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
+
+
 module.exports = router;
