@@ -3,10 +3,11 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
+const otpLimiter = require("../middleware/otpLimiter");
 
 const router = express.Router();
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", otpLimiter, async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
@@ -124,7 +125,7 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 
-router.post("/resend-otp", async (req, res) => {
+router.post("/resend-otp", otpLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 
