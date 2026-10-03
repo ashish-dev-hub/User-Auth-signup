@@ -6,6 +6,7 @@ const sendEmail = require("../utils/sendEmail");
 const otpLimiter = require("../middleware/otpLimiter");
 const jwt = require("jsonwebtoken");
 
+
 const router = express.Router();
 
 router.post("/signup", otpLimiter, async (req, res) => {
@@ -252,6 +253,8 @@ router.post("/login", async (req, res) => {
         });
     }
 });
+
+
 
 
 module.exports = router;

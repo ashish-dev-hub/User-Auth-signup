@@ -22,20 +22,31 @@ const userSchema = new mongoose.Schema({
         default: ""
     },
 
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
+   isVerified: {
+    type: Boolean,
+    default: false
+},
 
-    otp: {
+otp: {
+    type: String,
+    default: null
+},
+
+otpExpires: {
+    type: Date,
+    default: null
+},
+
+profileImage: {
+    secure_url: {
         type: String,
-        default: null
+        default: ""
     },
-
-    otpExpires: {
-        type: Date,
-        default: null
+    public_id: {
+        type: String,
+        default: ""
     }
+}
 });
 
 module.exports = mongoose.model("User", userSchema);
